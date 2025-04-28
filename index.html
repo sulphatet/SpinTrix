@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Offset for fixed-top navbar to prevent content overlap */
+      body {
+        padding-top: 70px;
+        margin: 0;
+      }
+      main {
+        padding-top: 0.5rem;
+      }
+      .container-fluid {
+        padding: 0.5rem;
+      }
+      .row.g-1 > [class*="col-"] {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+      }
+      .card {
+        margin: 0;
+      }
+      .card-body {
+        padding: 0.5rem;
+      }
+      
+      /* Widget Heights */
+      #nodeTimesliceChart {
+        width: 100%;
+        height: 200px;
+      }
+      
+      #communityMatrix {
+        width: 100%;
+        height: 100%;
+      }
+      #chart {
+        width: 100%;
+        height: 70vh;
+      }
+      /* Legend and Tooltip Styles */
+      .legend {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        font-family: Arial, sans-serif;
+        margin-bottom: 0.5rem;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+      }
+      .color-box {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        margin-right: 5px;
+      }
+      #connection_tooltip,
+      #ranking_tooltip,
+      #color_tooltip {
+        text-align: right;
+        font-size: 0.9rem;
+      }
+      .child {
+        display: inline-block;
+        padding: 0.5rem;
+      }
+      .key-dot {
+        display: inline-block;
+        height: 10px;
+        margin-right: 0.5em;
+        width: 10px;
+      }
+      .queens { background: #d7191c; }
+      .kings { background: #fdae61; }
+      .bronx { background: #74add1; }
+      .outlier { background: #000000; }
+      .intra { background: #253494; }
+      .inter { background: #c2c5c5; }
+      div.tooltip {
+        position: absolute;
+        text-align: center;
+        width: 150px;
+        height: 28px;
+        padding: 2px;
+        font: 14px sans-serif;
+        border: 0;
+        border-radius: 8px;
+        pointer-events: none;
+      }
+      .bar { fill: steelblue; }
+      .bar:hover { fill: brown; }
+      .barLight { fill: #2E2E31; }
+      .barBase { fill: steelblue; }
+      .strokechange { stroke-width: 0.1; }
+      .highlighttable { background-color: orange; }
+      .unhighlighttable { background-color: transparent; }
+      .strokenormal { stroke-width: 0.02; }
+      .title {
+        font: bold 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+      .axis {
+        font: 10px sans-serif;
+      }
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
+      .x.axis path { display: none; }
+      #table-location {
+        margin-left: 0;
+        margin-right: auto;
+        width: 100%;
+      }
+      .legend {
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
+            font-family: Arial, sans-serif;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+      #connection_tooltip{        
+      text-align: right;
+      }
+
+      #ranking_tooltip{        
+      text-align: right;
+      }
+
+      #color_tooltip{        
+      text-align: right;
+      }
+
+      button.active {
+  background-color: #007bff; /* Blue background */
+  color: #fff;               /* White text */
+  border-color: #007bff;
+}
+
+
+      #legend2{
+    overflow:hidden;
+}
+
+
+.child {
+  display: inline-block;
+  
+  padding: 1rem 1rem;
+  
+}
+
+.legend2 {
+    float:left;
+    margin-right: 1em;
+}
+
+.country-name {
+    margin: 0 !important;
+}
+.key-dot {
+    display: inline-block;
+    height: 10px;
+    margin-right: .5em;
+    width: 10px;
+}
+
+.queens { background: #d7191c;}
+.kings { background: #fdae61;}
+.bronx { background: #74add1;}
+.outlier {background: #000000}
+.intra {background: #253494}
+.inter {background: #c2c5c5}
+
+        div.tooltip {
+      position: absolute;
+      text-align: center;
+      width: 150px;
+      height: 28px;
+      padding: 2px;
+      font: 14px sans-serif;
+
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+      .bar {
+        fill: steelblue;
+        
+      }
+
+      .bar:hover {
+        fill: brown;
+      }
+
+      .barLight {
+    	  fill: #2E2E31;
+      }
+
+      .barBase {
+  	    fill: steelblue;
+      }
+
+    
+      .strokechange {
+        stroke-width : .1;
+
+      }
+
+      .highlighttable {
+        background-color: "orange";
+      }
+
+      .unhighlighttable {
+        background-color: "transparent";
+      }
+
+      .strokenormal {
+        stroke-width : .02;
+
+      }
+
+      .title {
+        font: bold 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+
+      .axis {
+        font: 10px sans-serif;
+      }
+
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
+
+      .x.axis path {
+        display: none;
+      }
+
+      #table-location {
+      	margin-left: 0;
+        margin-right: auto;
+        width: 100%;
+      
+      }
+    </style>
+    <title>SpinTrix</title>
+  </head>
+  <body>
+    <!-- top navigation bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+          <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#sidebar"
+          aria-controls="offcanvasExample"
+        >
+          <span class="navbar-toggler-icon" data-bs-target="#sidebar"></span>
+        </button>
+          <a class="navbar-brand" href="#">Spiral Visualization For Dynamic Graphs</a>
+        </div>
+        <!-- This flex container will expand and center the year buttons -->
+        <div class="d-flex justify-content-center">
+          <div id="year-buttons"></div>
+        </div>
+        
+      </nav>
+    <!-- top navigation bar -->
+    <!-- offcanvas -->
+    <div
+      class="offcanvas offcanvas-start sidebar-nav bg-dark offcanvas-show"
+      tabindex="-1"
+      id="sidebar"
+    >
+      <div class="offcanvas-body p-0">
+        <nav class="navbar-dark">
+          <ul class="navbar-nav">
+
+            <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+            <li>
+              <div class="text-muted small fw-bold text-uppercase px-3 mb-3">
+                Settings
+              </div>
+            </li>
+
+<!--
+            <li>
+              <a
+                class="nav-link px-3 sidebar-link"
+                data-bs-toggle="collapse"
+                href="#layouts"
+              >
+                <span>Spiral parameters</span>
+                <span class="ms-auto">
+                  <span class="right-icon">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </span>
+              </a>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Node radius = <input type="text" id="textInputradius" value="1.5" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="1" max="10" id="Radius" onchange="updateTextInputRadius(this.value)" value="1.5">
+                  </li>
+
+                  <li>
+                    <label for="customRange2" class="form-label text-white">max_spiral_radius = <input type="text" id="textInputradius" value="1.5" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="1" max="10" id="Radius" onchange="updateTextInputRadius(this.value)" value="1.5">
+                  </li>
+
+                  <li>
+                    <label for="customRange2" class="form-label text-white">max_spiral_colis = <input type="text" id="textInputradius" value="1.5" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="1" max="10" id="Radius" onchange="updateTextInputRadius(this.value)" value="1.5">
+                  </li>
+
+                  <li>
+                    <label for="customRange2" class="form-label text-white">max_spiral_nodes = <input type="text" id="textInputradius" value="1.5" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="1" max="10" id="Radius" onchange="updateTextInputRadius(this.value)" value="1.5">
+                  </li>
+
+                </ul>
+              </div>
+
+            </li>
+            -->
+
+
+            <li>
+              <a
+                class="nav-link px-3 sidebar-link"
+                data-bs-toggle="collapse"
+                href="#layouts"
+              >
+                <span>Find Node</span>
+                <span class="ms-auto">
+                  <span class="right-icon">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </span>
+              </a>
+              <div class="collapse" id="layouts">
+                <!-- Datalist for autocomplete -->
+                <input list="nodeAuthorList" id="searchInput" 
+                class="text-white bg-dark text-center" size="15"
+                placeholder="Type author or ID..." />
+
+                <datalist id="nodeAuthorList"></datalist>
+
+                <button onclick="searchSelectedNode()">Search</button>
+
+              </div>
+
+            </li>
+
+
+            <li>
+              <a
+                class="nav-link px-3 sidebar-link"
+                data-bs-toggle="collapse"
+                href="#layouts"
+              >
+                <span>Most Connected Nodes</span>
+                <span class="ms-auto">
+                  <span class="right-icon">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </span>
+              </a>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Degree >= <input type="text" id="textInputConnecteddeg" value="0" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="0" max="40" id="MostConnected" onchange="MostConnectedNodes(this.value)" value="0">
+
+                  </li>
+                </ul>
+              </div>
+
+            </li>
+
+
+            <li>
+              <a
+                class="nav-link px-3 sidebar-link"
+                data-bs-toggle="collapse"
+                href="#layouts"
+              >
+                <span>Ranking Nodes</span>
+                <span class="ms-auto">
+                  <span class="right-icon">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </span>
+              </a>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "degree_ranking()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Degree Centrality
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <!-- <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "closeness_ranking()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Closeness Centrality
+                    </button>
+                  </li>
+                </ul>
+              </div> -->
+              <!-- <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "between_ranking()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Betweenness Centrality
+                    </button>
+                  </li>
+                </ul>
+              </div> -->
+              <div class="collapse" id="layouts">
+                <!-- <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "eign_ranking()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Eign Centrality
+                    </button>
+                  </li>
+                </ul> -->
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "volatility_ranking()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Volatility Centrality
+                    </button>
+                  </li>
+                </ul>
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="local_volatility_ranking()" type="button">
+                      Local Volatility Centrality
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+            </li>
+            <li>
+              <a
+                class="nav-link px-3 sidebar-link"
+                data-bs-toggle="collapse"
+                href="#layouts"
+              >
+                <span>Filtering Nodes</span>
+                <span class="ms-auto">
+                  <span class="right-icon">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </span>
+              </a>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Degree >= <input type="text" id="textInputdeg" value="0" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="0" max="100" id="Degree" onchange="updateTextInputdeg(this.value)" value="0">
+
+                  </li>
+                </ul>
+              </div>
+              <!-- <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Closeness>= <input type="text" id="textInputclo" value="0" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="0" max="1" step= ".1" id="Closeness" onchange="updateTextInputclo(this.value)" value="0">
+                  </li>
+                </ul>
+              </div>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Eign>= <input type="text" id="textInputeig" value="0" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="0" max=".1" step= ".01" id="Eign" onchange="updateTextInputeig(this.value)" value="0">
+
+
+                  </li>
+                </ul>
+              </div> -->
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Volatility>= <input type="text" id="textInputvolatility" value="0" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="0" max="5" step= "1" id="Vol" onchange="updateTextInputvolatility(this.value)" value="0">
+                  </li>
+                </ul>
+              </div>
+
+              <div class="collapse" id="layouts" id="node-filter">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <label class="text-white">
+                      <input type="radio" name="nodeFilter" class="form-radio text-white" value="none" checked />
+                      None
+                    </label>
+                    <label class="text-white">
+                      <input type="radio" name="nodeFilter" class="form-radio text-white" value="incoming" />
+                      Incoming
+                    </label>
+                    <label class="text-white">
+                      <input type="radio" name="nodeFilter" class="form-radio text-white" value="outgoing" />
+                      Outgoing
+                    </label>
+                    <label class="text-white">
+                      <input type="radio" name="nodeFilter" class="form-radio text-white" value="both" />
+                      Both
+                    </label>
+                  </li>
+                </ul>
+              </div>
+
+              
+              <!-- <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <label for="customRange2" class="form-label text-white">Betweenness>= <input type="text" id="textInputbet" value="0" class = "text-white bg-dark text-center" size="5"></label>
+                    <input type="range" class="form-range text-white" min="0" max="1" step= ".1" id="Betweenness" onchange="updateTextInputbet(this.value)" value="0">
+                 </li>
+                </ul>
+              </div> -->
+            </li>
+            <li>
+              <a
+                class="nav-link px-3 sidebar-link"
+                data-bs-toggle="collapse"
+                href="#layouts"
+              >
+                <span>Color-Coding</span>
+                <span class="ms-auto">
+                  <span class="right-icon">
+                    <i class="bi bi-chevron-down"></i>
+                  </span>
+                </span>
+              </a>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "colorNodesByDensity()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Density
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "colorNodesByVolatility()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Volatility
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="colorNodesByLocalVolatility()" type="button">
+                      Local Volatility
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "colorNodesByDegree()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Degree
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <!-- <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "colorNodesByCloseness()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Closeness
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "colorNodesByBetweeness()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Betweenness
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="collapse" id="layouts">
+                <ul class="navbar-nav ps-3">
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "colorNodesByEign()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      Eign
+                    </button>
+                  </li>
+                </ul>
+              </div> -->
+            </li>
+
+            <li class="my-4"><hr class="dropdown-divider bg-light" /></li>
+            <li>
+              <div class="text-muted small fw-bold text-uppercase px-3 mb-3">
+                Addons
+              </div>
+            </li>
+            <li>
+  
+                  <li>
+                    <button class="btn btn-sm btn-outline-secondary" onclick= "edge_visualization()"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                      hide/show-edges
+                    </button>
+                  </li>
+
+            </li>
+            <li>
+              <button class="btn btn-sm btn-outline-secondary" onclick="reset_button()" type="button">
+                Reset
+              </button>
+            </li>
+            <li>
+              <a href="#" class="nav-link px-3">
+                <span class="me-2"><i class="bi bi-graph-up"></i></span>
+                <span>Charts</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-link px-3">
+                <span class="me-2"><i class="bi bi-table"></i></span>
+                <span>Tables</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+      <div class="container-fluid">
+        <!-- Row 1: Barchart, Author Details, and Matrix with Community Spiral -->
+        <div class="row g-1">
+          <!-- Barchart Column -->
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <div id="nodeTimesliceChart">
+                  <!-- Barchart content injected here -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Author Details Column -->
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <div id="community_textbox">
+                  <!-- Author name and other details injected here -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Matrix & Community Spiral Column (nested row) -->
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body">
+                <div class="row g-2">
+                  <!-- Adjacency Matrix -->
+                  <div class="col-6">
+                    <div id="communityMatrix">  
+                      <!-- Adjacency matrix content goes here -->
+                    </div>
+                  </div>
+                  
+                  <!-- Legend and Spiral Column -->
+                  <div class="col-6">
+                    <div id="communityMatrixLegend" class="mb-2">
+                      <!-- Matrix legend content injected here -->
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End of Row 1 -->
+
+        <!-- Row 2: Spiral Chart and Selected Community Chart -->
+        <div class="row">
+          <!-- Spiral Chart -->
+          <div class="col-md-8 mb-3">
+            <div class="card h-100">
+              <div class="card-header">
+                <span class="me-2"><i class="bi bi-bar-chart-fill"></i></span>
+                Spiral Chart - InfoVis
+              </div>
+              <div class="card-body">
+                <div class="legend">
+                  <div class="legend-item">
+                    <div class="color-box" style="background-color: #f4a582;"></div>
+                    <span>Outgoing Property</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="color-box" style="background-color: #0571b0;"></div>
+                    <span>Incoming Property</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="color-box" style="background-color: #92c5de;"></div>
+                    <span>Stable</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="color-box" style="background-color: #ca0020;"></div>
+                    <span>Both Incoming and Outgoing</span>
+                  </div>
+                </div>
+                <div class="parent">
+                  <div class="child" id="connection_tooltip" style="font-size:14px">
+                    <b>Nodes:</b> 1,329 &emsp; <b>Edges:</b> 3,320
+                  </div>
+                  <div class="child" id="ranking_tooltip" style="font-size:14px">
+                    <b>Ranking:</b> Local Volatility
+                  </div>
+                  <div class="child" id="color_tooltip" style="font-size:14px">
+                    <b>Color-Coding:</b> Local Volatility
+                  </div>
+                </div>               
+                <svg id="chart" width="100%" height="75vh" style="resize:both"></svg>
+                <div id="legend1" style="display: inline-block"></div>
+                <div id="community_spiral">
+                  <!-- Community spiral svg will be injected here -->
+                </div>
+                
+              </div>
+              
+            </div>
+          </div>
+          <!-- Selected Community Chart -->
+          <div class="col-md-4 mb-3">
+            <div class="card h-100">
+              <div class="card-header">
+                <span class="me-2"><i class="bi bi-bar-chart-fill"></i></span>
+                Selected community chart
+              </div>
+              <div class="card-body">
+                <div id="community_side_widget">
+                  <div id="communitySideContainer"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End of Row 2 -->
+      </div>
+      
+    </main>
+
+    <!-- Scripts -->
+    <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.2/dist/chart.min.js"></script>
+    <script src="./js/jquery-3.5.1.js"></script>
+    <script src="./js/jquery.dataTables.min.js"></script>
+    <script src="./js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script type="text/javascript" src="fitting_data_to_spiral3.js"></script>
+    <script type="text/javascript" src="barchart2.js"></script>
+    <script type="text/javascript" src="BarChartPopulator.js"></script>
+    <script type="text/javascript" src="settings1.js"></script>
+  </body>
+</html>
