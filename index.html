@@ -66,9 +66,7 @@
         border-radius: 4px;
         margin-right: 5px;
       }
-      body {
-        zoom: 80%;
-      }
+      
       #connection_tooltip,
       #ranking_tooltip,
       #color_tooltip {
@@ -234,6 +232,13 @@
 
       }
 
+        .scale-page {
+            transform: scale(0.8);
+            transform-origin: top left;
+            width: 125%; /* Inverse of 0.8 scaling: 1/0.8 = 1.25 */
+            height: 125%;
+        }
+
       .highlighttable {
         background-color: "orange";
       }
@@ -276,6 +281,7 @@
     <title>SpinTrix</title>
   </head>
   <body>
+    <div class="scale-page">
     <!-- top navigation bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
@@ -807,5 +813,6 @@
     <script type="text/javascript" src="barchart2.js"></script>
     <script type="text/javascript" src="BarChartPopulator.js"></script>
     <script type="text/javascript" src="settings1.js"></script>
+      </div>
   </body>
 </html>
