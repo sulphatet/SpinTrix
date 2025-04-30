@@ -1157,12 +1157,12 @@ function draw_spiral_community(){
 
   let text_for_legend;
   if (densityColFlag ==1) text_for_legend = "Density";
-  else if (degreeColFlag==1) text_for_legend =  "Degree";
-  else if (closenessColFlag==1) text_for_legend=  "Closeness";
+  else if (degreeColFlag==1) text_for_legend =  "   Degree";
+  else if (closenessColFlag==1) text_for_legend=  "   Closeness";
   else if (betweennessColFlag==1) text_for_legend =  "Betweeness";
   else if (eignColFlag==1) text_for_legend = "Eigen";
-  else if (volatilityColFlag==1) text_for_legend = "Volatility";
-  else if (localVolatilityColFlag==1) text_for_legend = "Local Volatility";
+  else if (volatilityColFlag==1) text_for_legend = "    Volatility";
+  else if (localVolatilityColFlag==1) text_for_legend = "    Local Volatility";
 
   g.append("g")
    .attr("class", "text_for_legend")
@@ -1618,6 +1618,17 @@ function getRandomColorForTimesliceCommunity(timeslice, commID) {
   return randomColorsByTimeslice[timeslice][commID];
 }
 
+/**
+++  * Consistent colour for an edge or node type, shared by main view and side widgets
+++  */
+ function getEdgeColorByType(t){
+   if (t === "incoming")  return "#0571b0";   // blue
+   if (t === "outgoing")  return "#f4a582";   // orange
+   if (t === "outandin")  return "#ca0020";   // red
+   return "#92c5de";                          // “neither” / undefined
+}
+
+
 ///////////////////////////////////////////////
 // UPDATE COMMUNITY SPIRAL SIDE WIDGET
 ///////////////////////////////////////////////
@@ -1792,7 +1803,8 @@ function updateCommunitySpiralSideWidget() {
       .enter()
       .append("line")
         .attr("class", "edgeCurrent")
-        .style("stroke", thisHighlightColor)
+        .style("stroke", d => getEdgeColorByType(d.type))
+        .style("stroke-opacity", 0.25)
         .style("stroke-width", 1.5)
         .style("opacity", 1)
         .attr("x1", d => {
@@ -1820,7 +1832,8 @@ function updateCommunitySpiralSideWidget() {
       .enter()
       .append("line")
         .attr("class", "edgeOriginal")
-        .style("stroke", "red")
+        .style("stroke", d => getEdgeColorByType(d.type))
+        //.style("stroke-opacity", 0.15)
         .style("stroke-width", 1.5)
         .style("opacity", 0)
         .attr("x1", d => {
@@ -1904,7 +1917,8 @@ function updateCommunitySpiralSideWidget() {
 
         // Highlight this ellipse in the side spiral
         d3.select(this)
-          .style("stroke", thisHighlightColor)
+          .style("stroke", d => getEdgeColorByType(d.type))
+          //.style("stroke-opacity", 0.15)
           .style("stroke-width", 2);
 
         // Also highlight in the main chart
