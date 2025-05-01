@@ -5,6 +5,7 @@ let closeness_var = 0;
 let volatility_var = 0; // New variable for volatility filtering
 
 function local_volatility_ranking() {
+  localVolatilityCenteringFlag = 1;
   let height = 700;
   let width = 1200;
   let prepare_data = [];
@@ -97,11 +98,13 @@ function colorNodesByLocalVolatility() {
 
 // ranking based on volatility
 function volatility_ranking() {
+  localVolatilityCenteringFlag = 0;
   let height = 700;
   let width = 1200;
   let prepare_data = [];
   unique_communities = new Set(global_data_unchanged.map(function(d) { return d.community; }));
   console.log("updated_version_volatility");
+  localVolatilityCenteringFlag = 0;
   unique_communities.forEach(function(entry) {
     community_data = global_data_unchanged.filter(function(d) { return d.community == entry; });
     community_data.sort(function(a, b) { return d3.descending(a.volatility, b.volatility); });
@@ -110,7 +113,8 @@ function volatility_ranking() {
   console.log(prepare_data);
 
   // Calculate final x and y position for each point
-  prepare_data = computing_spiral_positions(center_positions_spiral, prepare_data, optimal_no_of_nodes, height, width);
+  localVolatilityCenteringFlag = 0;
+  prepare_data = computing_spiral_positions(center_positions_spiral, prepare_data, height, width);
   global_data = prepare_data;
   global_data_unchanged = prepare_data;
 
@@ -315,6 +319,7 @@ function MostConnectedNodes(val) {
 //ranking button
 //ranking based on degree
 function degree_ranking(){
+  localVolatilityCenteringFlag = 0;
   let height = 700
   let width =1200
   let prepare_data = []
@@ -330,7 +335,7 @@ function degree_ranking(){
   //calculate final x and y position for each point
   //computing_spiral_positions(center_positions_spiral, data, optimal_no_of_nodes, height, width)
   //prepare_data = computing_spiral_positions(center_positions_spiral, prepare_data, height, width)
-  prepare_data = computing_spiral_positions(center_positions_spiral, prepare_data,optimal_no_of_nodes, height, width)
+  prepare_data = computing_spiral_positions(center_positions_spiral, prepare_data, height, width)
   global_data = prepare_data
   global_data_unchanged = prepare_data
 
