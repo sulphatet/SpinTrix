@@ -316,132 +316,122 @@ function find_node_draw_spiral(new_data1){
 }
 
 // draw spiral in side window on click community
-function draw_spiral(new_data1, adjacent_nodes, activeNode){
+function draw_spiral(new_data1, adjacent_nodes, activeNode) {
+  /******************************************************************
+   * 1 ▸ DIMENSIONS
+   ******************************************************************/
+  // real size of the container (flex-box makes this vary!)
+  const bounds   = d3.select("#community_spiral").node().getBoundingClientRect();
+  const width    = bounds.width  || 300;          // fall-back for old browsers
+  const height   = bounds.height || 300;
+  const centerX  = width  / 2;
+  const centerY  = height / 2;
 
-  var width = 400,
-      height = 300;
+  /******************************************************************
+   * 2 ▸ SPIRAL PARAMETERS (derived, not fixed)
+   ******************************************************************/
+  const nPoints  = new_data1.length;
 
-  let centerX = 150,
-      centerY = 150,
-      radius = 150,
-      sides = 450,
-      coils = 20,
-      rotation = 0;
-  let awayStep = radius/sides;
-  let aroundStep = coils/sides;
-  let aroundRadians = aroundStep * 2 * 3.14;
-  rotation *= 2 * 3.14;
+  // the outer radius is 90 % of the smallest half-dimension → no clipping
+  const radius   = (Math.min(width, height) / 2) * 0.9;
 
-  let count = 0;
-  let no_of_points_in_community = new_data1.length;
-  let xCoordinateOfActiveNode_new, yCoordinateOfActiveNode_new;
-  let node_name, deg, clo, bet, eig, volatility;
+  // one “side” per node, so every node has its own step
+  const sides    = nPoints;
 
-  for (let i=0; i<no_of_points_in_community;i++){
-      let away = (i+30) * awayStep;
-      let around = (i+30) * aroundRadians + rotation;
+  // put ≈ 45 nodes per revolution; tweak to taste
+  const coils    = Math.ceil(nPoints / 45);
 
-      new_data1[i]['new_x'] = centerX + Math.cos(around) * (away );
-      new_data1[i]['new_y'] = centerY + Math.sin(around) * (away);
+  const awayStep     = radius / sides;
+  const aroundStep   = coils  / sides;
+  const aroundRad    = aroundStep * 2 * Math.PI;
 
-      if (new_data1[i]['node']== activeNode)
-      {
-        node_name = new_data1[i]['name'];
-        xCoordinateOfActiveNode_new = new_data1[i]['new_x'];
-        yCoordinateOfActiveNode_new = new_data1[i]['new_y'];
-        deg = new_data1[i]['centrality'];
-        clo = new_data1[i]['closeness'];
-        bet = new_data1[i]['betwness'];
-        eig = new_data1[i]['eign'];
-        volatility = new_data1[i]['volatility'];
-      }
-  }
+  /******************************************************************
+   * 3 ▸ CALCULATE COORDINATES
+   ******************************************************************/
+  let xActive, yActive, node_name, deg, clo, bet, eig, volatility;
 
+  new_data1.forEach((d, i) => {
+    const away   = (i + 0.5) * awayStep;          // 0.5 keeps the first node off the origin
+    const around = (i + 0.5) * aroundRad;
+
+    d.new_x = centerX + Math.cos(around) * away;
+    d.new_y = centerY + Math.sin(around) * away;
+
+    if (d.node === activeNode) {
+      xActive = d.new_x;
+      yActive = d.new_y;
+      ({ name:  node_name,
+         centrality: deg,
+         closeness:  clo,
+         betwness:   bet,
+         eign:       eig,
+         volatility: volatility } = d);
+    }
+  });
+
+  /******************************************************************
+   * 4 ▸ DRAW
+   ******************************************************************/
+  // wipe the old miniature spiral
   d3.select("#community_spiral").select("svg").remove();
-  d3.select("#node_spiral").select("svg").remove();
 
-  var svg_community = d3.select("#community_spiral").append("svg")
-  .attr("viewBox", "0 0 300 200")  // Add viewBox
-    .append("g")
-    .attr("transform", "translate(0, -100)");  // Move group up
+  const svg = d3.select("#community_spiral")
+                .append("svg")
+                  .attr("viewBox", `0 0 ${width} ${height}`)
+                  .attr("preserveAspectRatio", "xMidYMid meet")
+                .append("g");                     // no translate needed – coords already centred
 
-  var circles = svg_community.selectAll("circle")
-                .data(new_data1)
-              .enter()
-                .append("circle")
-                .attr("cx", function (d) { return d.new_x; })
-                .attr("cy", function (d) { return d.new_y; })
-                .attr("r", function(d){
-                  if (d.node == find_node_id)
-                    return 6;
-                  else
-                    return 1.5;
-                })
-                .style("fill", function(d){
-                  if (d.node == find_node_id) {
-                    return "black";
-                  }
+  // plot nodes
+  const circles = svg.selectAll("circle")
+      .data(new_data1)
+    .enter().append("circle")
+      .attr("cx", d => d.new_x)
+      .attr("cy", d => d.new_y)
+      .attr("r", d => (d.node === find_node_id ? 6 : 1.5))
+      .style("fill", function(d) {                // ← your original colour logic
+        if (d.node === find_node_id) return "black";
 
-                  if (adjacent_nodes.includes(d.node)){
-                    count++;
-                    svg_community.append('line')
-                          .style("stroke", "#253494" )
-                          .style("strokeOpacity",.5)
-                          .style("stroke-width",1.5)
-                          .attr("x1", xCoordinateOfActiveNode_new)
-                          .attr("y1", yCoordinateOfActiveNode_new)
-                          .attr("x2", d.new_x)
-                          .attr("y2", d.new_y);
-                    return "#253494";
-                  }
-                  else {
-                    //--- ADDED FOR LOCAL VOLATILITY ---
-                    if (localVolatilityColFlag == 1) {
-                      // New local-volatility color logic
-                      if (d.type === "outandin") return "#ca0020";
-                      else if (d.type === "incoming") return "#0571b0";
-                      else if (d.type === "outgoing") return "#f4a582";
-                      else return "#92c5de";
-                    }
+        if (adjacent_nodes.includes(d.node)) {
+          // draw the spoke
+          svg.append("line")
+             .attr("x1", xActive).attr("y1", yActive)
+             .attr("x2", d.new_x).attr("y2", d.new_y)
+             .style("stroke", "#253494")
+             .style("stroke-opacity", .5)
+             .style("stroke-width", 1.5);
+          return "#253494";
+        }
 
-                    if (densityColFlag ==1)
-                      return colorscaleDensity(d.density);
-                    else if (degreeColFlag==1){
-                      if (d.centrality > extent_of_centralities_after_removing_outliers.degree_range[1])
-                        return "black";
-                      else
-                        return colorscaleDegree(d.centrality);
-                    }
-                    else if (closenessColFlag==1){
-                      if (d.closeness > extent_of_centralities_after_removing_outliers.closeness_range[1])
-                        return "black";
-                      else
-                        return colorscaleCloseness(d.closeness);
-                    }
-                    else if (betweennessColFlag==1){
-                      if (d.betwness > extent_of_centralities_after_removing_outliers.betwness_range[1])
-                        return "black";
-                      else
-                        return colorscaleBetwness(d.betwness);
-                    }
-                    else if (eignColFlag==1){
-                      if (d.eign > extent_of_centralities_after_removing_outliers.eign_range[1])
-                        return "black";
-                      else
-                        return colorscaleEign(d.eign);
-                    }
-                    else if (volatilityColFlag==1){
-                      if (d.volatility > extent_of_centralities_after_removing_outliers.volatility_range[1])
-                        return "black";
-                      else
-                        return colorscaleVolatility(d.volatility);
-                    }
-                  }
-                });
+        /* ---- original flag-driven palette ---- */
+        if (localVolatilityColFlag === 1) {
+          if (d.type === "outandin")  return "#ca0020";
+          if (d.type === "incoming")  return "#0571b0";
+          if (d.type === "outgoing")  return "#f4a582";
+          return "#92c5de";
+        }
 
-  var centrality_data = new_data1.map(function(d){return d.centrality});
-  draw_textbox(new_data1, adjacent_nodes, activeNode, count, deg, bet, clo, eig, node_name);
+        if (densityColFlag)    return colorscaleDensity(d.density);
+        if (degreeColFlag)     return (d.centrality > extent_of_centralities_after_removing_outliers.degree_range[1])
+                                     ? "black" : colorscaleDegree(d.centrality);
+        if (closenessColFlag)  return (d.closeness  > extent_of_centralities_after_removing_outliers.closeness_range[1])
+                                     ? "black" : colorscaleCloseness(d.closeness);
+        if (betweennessColFlag)return (d.betwness  > extent_of_centralities_after_removing_outliers.betwness_range[1])
+                                     ? "black" : colorscaleBetwness(d.betwness);
+        if (eignColFlag)       return (d.eign      > extent_of_centralities_after_removing_outliers.eign_range[1])
+                                     ? "black" : colorscaleEign(d.eign);
+        if (volatilityColFlag) return (d.volatility> extent_of_centralities_after_removing_outliers.volatility_range[1])
+                                     ? "black" : colorscaleVolatility(d.volatility);
+
+        return "#aaa"; // fall-back
+      });
+
+  /******************************************************************
+   * 5 ▸ UPDATE INFO BOX
+   ******************************************************************/
+  draw_textbox(new_data1, adjacent_nodes, activeNode,
+               adjacent_nodes.length, deg, bet, clo, eig, node_name);
 }
+
 
 //convert node data from string to integers
 function transform_data(data){
@@ -512,28 +502,33 @@ document.querySelectorAll("input[name='nodeFilter']").forEach(radio => {
   });
 });
 
-function transform_graph_centers(data, height, width){
-  let radius = 350,
-      coils = 6,
-      rotation = 0,
-      sides = 100;
-  let awayStep = radius/sides;
-  let aroundStep = coils/sides;
-  let aroundRadians = aroundStep * 2 * 3.14;
-  rotation *= 2 * 3.14;
+function transform_graph_centers(data, height, width) {
+  const nCommunities = data.length;
 
-  let newdata1 = [];
+  // Dynamically adjust spiral radius based on available space
+  const maxRadius = Math.min(width, height) * 0.45;  // 90% of half-dimension
+  const centerX = width / 2;
+  const centerY = height / 2;
 
-  let no_of_points_in_community = data.length;
-  for (let i=0; i<no_of_points_in_community;i++){
-      let away = (i+5) * awayStep;
-      let around = (i+5) * aroundRadians + rotation;
+  // Make spiral smoother when there are more communities
+  const sides = nCommunities;
+  const coils = Math.ceil(nCommunities / 16);         // 8 communities per loop
 
-      data[i]['cx'] = 350 + Math.cos(around) * (away );
-      data[i]['cy'] = 250 + Math.sin(around) * (away);
+  const awayStep = maxRadius / sides;
+  const aroundStep = coils / sides;
+  const aroundRadians = aroundStep * 2 * Math.PI;
+
+  for (let i = 0; i < nCommunities; i++) {
+    const away = (i + 0.5) * awayStep;               // 0.5 offsets center
+    const around = (i + 0.5) * aroundRadians;
+
+    data[i].cx = centerX + Math.cos(around) * away;
+    data[i].cy = centerY + Math.sin(around) * away;
   }
+
   return data;
 }
+
 
 //--- MODIFIED FOR LOCAL VOLATILITY CENTERING ---
 function computing_spiral_positions(center_positions_spiral, data_points, height, width) {
